@@ -5,42 +5,91 @@
 <head>
 
     <meta charset="utf-8"/>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>go测试socket</title>
-
+    <style>
+        html {
+            border: 5px solid gold;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .main {
+            overflow: scroll;
+            height: 80vh;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 1px;
+        }
+        .header > h1 {
+            color: blueviolet;
+        }
+        .type-text {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            margin-left: 0px;
+        }
+        
+        .type-text input {
+            position: absolute;
+            width: 96%;
+            left: 50%;
+            bottom: 5px;
+            transform: translateX(-50%);
+            height: 6vh;
+            font-size: 5vh;
+            margin-right: 5px;
+            border: 5px solid rgba(0,0,0,0.3);
+        }
+        li {
+            list-style: none;
+            margin-bottom: 1vh;
+            font-size: 3.5vh;
+            color: rgba(0,0,0,0.7);
+        }
+        .decoration {
+            position: absolute;
+            
+        }
+    </style>
 </head>
 
 <body>
-    <h1>WebSocket Echo Test</h1>
-    <div id="app">...</div>
-    <form action="#s">
+    <div class="decoration"></div>
+    <div class="header">
+        <h1>
+            Spot 聊天室
+        </h1>
+    </div>
+    <div class="main">
+        <div id="container">
 
-        <p>
-
-            Message: <input id="message" type="text" value="Hello, world!">
-
-        </p>
-
-    </form>
-
-    <button onclick="send();">Send Message</button>
+        </div>
+        <div class="type-text">
+            <form>
+                <input id="message" type="text">
+            </form>
+        </div>
+    </div>
     <script type="text/javascript">
-        var app = document.getElementById('app')
+        var container = document.getElementById('container')
 
         var sock = null;
 
-        var wsuri = "ws://192.168.191.1:8080/websocket";
+        var wsuri = "ws://localhost:8080/websocket";
 
         window.onload = function() {
 
-            console.log("onload");
 
             sock = new WebSocket(wsuri);
 
             sock.onopen = function() {
 
                 console.log("connected to " + wsuri);
-
+                init()
             }
 
             sock.onclose = function(e) {
@@ -51,18 +100,46 @@
 
             sock.onmessage = function(e) {
                 const j = JSON.parse(e.data)
-                console.log("message received: ", j);
-                app.textContent = j[0]
-            }
+                container.innerHTML = ''
+                const ul = document.createElement('ul')
 
+                for(let i = 0 ; i < 15; i++){
+                    let li = document.createElement('li')
+                    li.textContent = j[i]
+                    ul.appendChild(li)
+                }
+
+                container.appendChild(ul)
+            }
+            
+            document.forms[0].addEventListener('submit', e => {
+                e.preventDefault()
+                send()
+            })
         };
+        
+        function init() {
+            let xhr = new XMLHttpRequest()
+            xhr.open('GET', 'https://ipapi.co/json/')
+            xhr.responseType = 'json'
+            xhr.onreadystatechange = function () {
+                if(xhr.readyState === 4 && xhr.status === 200){
+                    sock.send(xhr.response.city + '用户 加入')
+                } else {
+
+                }
+            }
+            xhr.send()
+        }
 
         function send() {
 
-            var msg = document.getElementById('message').value;
-
-            sock.send(msg);
-
+            var msg = document.getElementById('message');
+            
+            if(!/^\s*$/.test(msg.value)){
+                sock.send(msg.value);
+            }
+            msg.value = ''
         };
 
     </script>
